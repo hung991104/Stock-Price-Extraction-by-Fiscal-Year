@@ -2,11 +2,6 @@
 
 Sys.setlocale(locale = "English")
 
-library(quantmod)
-library(tidyverse)
-library(lubridate)
-library(openxlsx)    # save output as xlsx
-
 FiscalPriceRange = function(ticker, start, end, startFiscal){
   
   # Package names
