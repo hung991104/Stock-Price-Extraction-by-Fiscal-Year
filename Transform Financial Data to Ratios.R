@@ -35,7 +35,9 @@ Ratios_wide <- Ratios %>%
 
 FinData_Annual <- Ratios_wide %>%
   select(year, share_number, net_debt, net_income, EBITA) %>%
-  mutate(year = as.integer(year)) %>%
+  mutate(year = as.integer(year)) 
+
+FinData_Annual <- FinData_Annual%>%
   add_row(year = FinData_Annual[[nrow(FinData_Annual), 1]]+1) %>%
   mutate(LY_net_debt = lag(net_debt, 1)) %>%
   select(year, LY_net_debt, everything()) %>%
@@ -47,8 +49,8 @@ print(FinData_Annual[c(1, nrow(FinData_Annual)),1])
 
 # Extract Price Records ---------------------------------------------------
 
-start = ymd("2011-07-01")
-end = ymd("2021-04-30")
+start = ymd("2011-07-01")   
+end = Sys.Date() - 1    # Yesterday
 
 # include the latest year
 fiscal_years = c(FinData_Annual[[1,1]]:FinData_Annual[[nrow(FinData_Annual), 1]]) 
@@ -78,6 +80,21 @@ daily_ev %>%
   ggplot(aes(Date, EV_EBITA)) +
   geom_line()
 
+# Get High and low of EV/EBITA each fiscal year
+Annual_EV_EBITA <- daily_ev %>%
+  group_by(fiscal) %>%
+  summarise(Ratio_High = max(EV_EBITA), Ratio_Low = min(EV_EBITA)) %>%
+  filter(!is.na(Ratio_High) & !is.na(Ratio_Low))    # no EBITA in latest year => NA => filter out
+
+Annual_EV_EBITA %>% 
+  pivot_longer(c(-1), names_to = "metric", values_to = "value") %>%
+  ggplot() +
+  geom_line(aes(x = fiscal, y = value, color = metric)) +
+  labs(title = "EV/EBITA Trend", x = "Fiscal Year", y = "EV/EBITA") +
+  scale_y_continuous(limits = c(0, 30)) + 
+  scale_x_continuous(limits = c(fiscal_years[1], fiscal_years[length(fiscal_years)])) + 
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5))     # title in the middle
 
 
 # Obsolete ----------------------------------------------------------------
@@ -91,7 +108,9 @@ Year_Net_Debt <- Ratios_wide %>%
   select(year, net_debt, share_number)
 
 start = ymd("2010-07-01")
-end = ymd("2021-04-30")
+#end = ymd("2021-04-30")
+end = Sys.Date() - 1
+
 day_range <- seq(start, end, by = "day")
 daily_netdebt <- approx(Year_Net_Debt$year, Year_Net_Debt$net_debt, n = length(day_range))
 daily_sharenum <- approx(Year_Net_Debt$year, Year_Net_Debt$share_number, n = length(day_range))
