@@ -1,17 +1,26 @@
 # Read and Plot Ratios --------------------------------------------------------
 
+# Load Packages
+# Package names
+packages <- c("quantmod", "tidyverse", "lubridate")
 
-if(!require("quantmod")){
-  install.packages("quantmod")
-  library(quantmod)
+# Install packages not yet installed
+installed_packages <- packages %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
 }
-library(tidyverse)
-library(lubridate)
+
+# Packages loading
+invisible(lapply(packages, library, character.only = TRUE))
+
+# Set theme of plots
 theme_set(theme_bw())
 
-ticker <- "NOC"
+# Read financial data of specific ticker
+ticker <- "MSFT"
+ReadPath <- paste0("C:/Users/User/Desktop/asset/analysis/stock analysis/", ticker, "/data/DataForRatio.csv")
+# ReadPath <- paste0("C:/Users/User/Desktop/asset/analysis/stock analysis/", ticker, "/data/Ratios.csv")
 
-ReadPath <- paste0("C:/Users/User/Desktop/asset/analysis/stock analysis/", ticker, "/data/Ratios.csv")
 Ratios <- read.csv(ReadPath, header = TRUE)
 Ratios 
 
@@ -20,7 +29,7 @@ Ratio_long <- Ratios %>%
   select(metric, starts_with("x")) %>% 
   pivot_longer(c(-1), names_to = "year", values_to = "value") 
 
-Ratio_wide <- Ratio_wide%>%
+Ratio_wide <- Ratio_long%>%
   pivot_wider(names_from = "metric", values_from = "value") %>%
   mutate(year = gsub("^x", "", year)) %>%
   arrange(year)
