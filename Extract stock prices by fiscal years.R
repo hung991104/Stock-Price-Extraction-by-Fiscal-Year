@@ -1,8 +1,20 @@
 # Extract stock prices by fiscal years
+# Modify row 46 and 24!!!!
 
 Sys.setlocale(locale = "English")
 
-FiscalPriceRange = function(ticker, start, end, startFiscal){
+FiscalPriceRange = function(ticker, start, end, startFiscal, endFiscal){
+  
+  # convert start date and end date to time
+  start = ymd(start)
+  end = ymd(end)
+  
+  # Check validity of input
+  if(startFiscal > endFiscal){
+    stop("startFiscal should be less than or equal to endFiscal")
+  } else if(start > end){
+    stop("start should be less than or equal to end")
+  }
   
   # Package names
   packages <- c("quantmod", "tidyverse", "lubridate","openxlsx")
@@ -16,14 +28,11 @@ FiscalPriceRange = function(ticker, start, end, startFiscal){
   # Packages loading
   invisible(lapply(packages, library, character.only = TRUE))
   
-  
   # Print the result
   print(paste0("ticker: ", ticker))
   print(paste("Extracting Period: ", start, "to", end, sep = " "))
-  print(paste("Fiscal Year:", as.character(startFiscal), "to", as.character(startFiscal + 10), sep = " "))
-  
-  start = ymd(start)
-  end = ymd(end)
+  print(paste("Fiscal Year:", as.character(startFiscal), "to", as.character(endFiscal), sep = " "))
+
   
   # Extract Price Records
   stock <- getSymbols(ticker, src = "yahoo", from = start, to = end, auto.assign = FALSE)
@@ -43,7 +52,7 @@ FiscalPriceRange = function(ticker, start, end, startFiscal){
   stock_df <- stock_df %>%
     mutate(fiscal = cut(Date,
                         breaks = seq(start, end + years(1), by = "year"),
-                        labels = 2011:2021))
+                        labels = startFiscal:endFiscal))
   
   # Get High and Low of each fiscal year
   stock_df_High_Low <- stock_df %>% 
@@ -59,8 +68,9 @@ FiscalPriceRange = function(ticker, start, end, startFiscal){
 }
 
 # Get price high/low of ticker
-ticker = "T"
-PriceHighLow <- FiscalPriceRange(ticker, "2011-01-01", "2021-04-30", startFiscal = 2011)
+ticker = "CCI"
+yesterday = Sys.Date() - 1    # Yesterday
+PriceHighLow <- FiscalPriceRange(ticker, "2011-01-01", yesterday, startFiscal = 2011, endFiscal = 2021)
 
 # save the data in "Price.xlsx"
 outputdata = set_names(list(ticker = PriceHighLow), ticker)
