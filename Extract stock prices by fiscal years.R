@@ -5,17 +5,6 @@ Sys.setlocale(locale = "English")
 
 FiscalPriceRange = function(ticker, start, end, startFiscal, endFiscal){
   
-  # convert start date and end date to time
-  start = ymd(start)
-  end = ymd(end)
-  
-  # Check validity of input
-  if(startFiscal > endFiscal){
-    stop("startFiscal should be less than or equal to endFiscal")
-  } else if(start > end){
-    stop("start should be less than or equal to end")
-  }
-  
   # Package names
   packages <- c("quantmod", "tidyverse", "lubridate","openxlsx")
   
@@ -27,6 +16,17 @@ FiscalPriceRange = function(ticker, start, end, startFiscal, endFiscal){
   
   # Packages loading
   invisible(lapply(packages, library, character.only = TRUE))
+  
+  # convert start date and end date to time
+  start = ymd(start)
+  end = ymd(end)
+  
+  # Check validity of input
+  if(startFiscal > endFiscal){
+    stop("startFiscal should be less than or equal to endFiscal")
+  } else if(start > end){
+    stop("start should be less than or equal to end")
+  }
   
   # Print the result
   print(paste0("ticker: ", ticker))
