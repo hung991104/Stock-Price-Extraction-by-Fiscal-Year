@@ -18,7 +18,7 @@ theme_set(theme_bw())
 
 
 # Read Data Summary of specific ticker ------------------------------------
-ticker = "CCI"
+ticker = "ADP"
 ReadPath = paste0("C:/Users/User/Desktop/asset/analysis/stock analysis/", ticker, "/data/DataSummary.csv")
 DataSummary = read.csv(ReadPath, header = TRUE)
 
@@ -51,7 +51,7 @@ DataSummary_Margin %>%
   pivot_longer(c(-1), names_to = "margin", values_to = "value") %>%
   ggplot(aes(date, value, group = margin, color = margin)) +
   geom_line() +
-  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.1)) +
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.1), labels = scales::percent) +
   labs(y = "Margin (%)", title = "Margins by fiscal years") +
   theme(plot.title = element_text(hjust = 0.5))     # title in the middle
 
@@ -62,8 +62,9 @@ DataSummary_Margin %>%
 # Regression on Revenue Growth --------------------------------------------
 DataSummary %>%
   select(year, revenue) %>%
-  ggplot(aes(year, revenue)) + 
-  geom_point() +
+  ggplot() + 
+  geom_point(aes(year, revenue)) +
+  geom_line(aes(year, revenue), data = DataSummary) +
   scale_x_continuous(breaks = seq(2011, 2020, by = 1)) +
   labs(x = "fiscal year", title = "Revenue From 2011 to 2020") +
   theme(plot.title = element_text(hjust = 0.5))     # title in the middle
@@ -86,3 +87,48 @@ plot(Revenue_ln_lmfit)
 dev.off()    # reset the graph setting
 
 # Note that the growth rate in the past is not a good indicator of growth in the future!
+
+
+
+# Beneish-M-Score - detect financial fraud/ earning manipulation ---------------------------------------------------------
+
+Beneish_Data = DataSummary %>%
+  select(year, revenue, gross_profit, receivables, total_current_assets, 
+         net_ppe, d_a, amortization_for_acquired_ia, sg_a, 
+         total_assets, lt_debt, total_current_liabilities, net_income, operating_cash_flow) %>%
+  mutate(gross_margin = gross_profit / revenue,
+         day_sales_in_receivables = receivables / revenue * 365,
+         sga_margin = sg_a / revenue,
+         depreciation = d_a - amortization_for_acquired_ia,
+         depreciation_prop = depreciation / (net_ppe + depreciation),
+         leverage_prop = (total_current_liabilities + lt_debt)/total_assets,
+         cur_asset_ppe_prop = (total_current_assets + net_ppe)/total_assets)
+
+# Compute relevant indicators
+Beneish_Score = Beneish_Data %>% 
+  mutate(DSRI = day_sales_in_receivables / lag(day_sales_in_receivables, 1),
+         GMI = lag(gross_margin, 1)/ gross_margin,
+         AQI = (1 - cur_asset_ppe_prop)/(1 - lag(cur_asset_ppe_prop, 1)),
+         SGI = revenue/ lag(revenue, 1),
+         DEPI = lag(depreciation_prop,1)/depreciation_prop,
+         SGAI = sga_margin / lag(sga_margin, 1),
+         LVGI = leverage_prop / lag(leverage_prop, 1),
+         TATA = (net_income - operating_cash_flow)/total_assets) %>%
+  # remove first column 
+  .[-1, ] %>%
+  mutate(M_Score = -4.84 + 0.92*DSRI + 0.528*GMI + 0.404*AQI + 0.892*SGI + 0.115*DEPI - 0.172*SGAI + 4.679*TATA - 0.327*LVGI)
+
+# Plot M-Score's trend
+Beneish_Score %>%
+  ggplot() +
+  geom_point(aes(year, M_Score)) +
+  geom_line(aes(year, M_Score), data = Beneish_Score) +
+  geom_hline(yintercept = -1.78, color = "red", size = 1.2) +
+  geom_hline(yintercept = -2.22, color = "orange", size = 1.1, linetype = "dashed") + 
+  scale_y_continuous(limits = c(-4,1), breaks = seq(-4, 1, by = 0.5)) +
+  labs(x = "Fiscal Year", y = "M-Score", title = paste0(ticker, " Beneish M-Score Trend by Fiscal Year")) +
+  theme(plot.title = element_text(hjust = 0.5))     # title in the middle
+
+# Score < -2.22: Not manipulator
+# 2.22 <= Score < -1.78: Possible manipulator
+# Score >= 1.78: Likely manipulator
