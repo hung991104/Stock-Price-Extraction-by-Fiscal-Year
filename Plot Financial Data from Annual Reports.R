@@ -18,7 +18,7 @@ theme_set(theme_bw())
 
 
 # Read Data Summary of specific ticker ------------------------------------
-ticker = "ADP"
+ticker = "AON"
 ReadPath = paste0("C:/Users/User/Desktop/asset/analysis/stock analysis/", ticker, "/data/DataSummary.csv")
 DataSummary = read.csv(ReadPath, header = TRUE)
 
@@ -124,11 +124,18 @@ Beneish_Score %>%
   geom_point(aes(year, M_Score)) +
   geom_line(aes(year, M_Score), data = Beneish_Score) +
   geom_hline(yintercept = -1.78, color = "red", size = 1.2) +
+  geom_text(aes(min(Beneish_Score$year), -1.78, label = -1.78, vjust = -0.75)) + 
   geom_hline(yintercept = -2.22, color = "orange", size = 1.1, linetype = "dashed") + 
-  scale_y_continuous(limits = c(-4,1), breaks = seq(-4, 1, by = 0.5)) +
+  geom_text(aes(min(Beneish_Score$year), -2.22, label = -2.22, vjust = -0.75)) + 
+  scale_x_continuous(breaks = seq(min(Beneish_Score$year), max(Beneish_Score$year), by = 1)) + 
+  scale_y_continuous(limits = c(-4,0.5), breaks = seq(-4, 0.5, by = 0.5)) +
   labs(x = "Fiscal Year", y = "M-Score", title = paste0(ticker, " Beneish M-Score Trend by Fiscal Year")) +
   theme(plot.title = element_text(hjust = 0.5))     # title in the middle
 
 # Score < -2.22: Not manipulator
 # 2.22 <= Score < -1.78: Possible manipulator
 # Score >= 1.78: Likely manipulator
+
+# Save the M-Score's Plot
+SavePlotPath = paste0("C:/Users/User/Desktop/asset/analysis/stock analysis/", ticker, "/data/", ticker,"_Beneish_M_Score.jpg")
+ggsave(SavePlotPath)
