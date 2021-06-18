@@ -59,7 +59,7 @@ Stock_Fiscal_Quarter = function(ticker, start, startFiscal){
 }
 
 # Obtain price record with fiscal years and quarters
-ticker = "ROKU"
+ticker = "COST"
 start = "2011-01-01"
 startFiscal = 2011
 PriceRecord = Stock_Fiscal_Quarter(ticker, start, startFiscal)
@@ -74,9 +74,23 @@ Fiscal_High_Low = PriceRecord %>%
   pivot_longer(c(Fiscal_High, Fiscal_Low), names_to = "Range", values_to = "Value") %>% 
   arrange(desc(fiscal))  %>% pivot_wider(names_from = fiscal, values_from = "Value")
 
-# save the data in "Price.xlsx"
+# create data folder for the ticker
+tickerDir <- paste0("C:/Users/User/Desktop/asset/analysis/stock analysis/", ticker)
+dataDir <- paste0(tickerDir,"/data")
+if(!dir.exists(tickerDir)) {
+  dir.create(tickerDir)
+  dir.create(dataDir)
+  print(paste0("Create folders for ", ticker))
+} else if(!dir.exists(dataDir)){
+  dir.create(dataDir)
+  print(paste0("Create data folder for ", ticker))
+} else {
+  # The folders for the ticker exist
+}
+
+# save the data as "Price.xlsx"
 outputdata = set_names(list(ticker = Fiscal_High_Low), ticker)
-outputfile = paste0("C:/Users/User/Desktop/asset/analysis/stock analysis/", ticker,"/data/Price.xlsx")
+outputfile = paste0(dataDir,"/Price.xlsx")
 write.xlsx(outputdata, file = outputfile)
 
 # Plot stock price record
@@ -89,6 +103,10 @@ PriceRecord %>%
   theme_minimal() + 
   labs(title = paste0(ticker, " stock price"),
        y = "Close Price")
+
+
+
+
 
 
 
