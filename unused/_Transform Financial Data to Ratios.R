@@ -19,7 +19,7 @@ theme_set(theme_bw())
 
 # Read financial data of specific ticker ----------------------------------
 
-ticker <- "MSFT"
+ticker <- "PFE"
 ReadPath <- paste0("C:/Users/User/Desktop/asset/analysis/stock analysis/", ticker, "/data/DataForRatio.csv")
 Ratios <- read.csv(ReadPath, header = TRUE)
 
@@ -49,7 +49,7 @@ print(FinData_Annual[c(1, nrow(FinData_Annual)),1])
 
 # Extract Price Records ---------------------------------------------------
 
-start = ymd("2011-07-01")   
+start = ymd("2017-01-01")   
 end = Sys.Date() - 1    # Yesterday
 
 # include the latest year
@@ -91,7 +91,7 @@ Annual_EV_EBITA %>%
   ggplot() +
   geom_line(aes(x = fiscal, y = value, color = metric)) +
   labs(title = "EV/EBITA Trend", x = "Fiscal Year", y = "EV/EBITA") +
-  scale_y_continuous(limits = c(0, 30)) + 
+  scale_y_continuous(limits = c(0, 30), breaks = seq(0, 30, 2.5)) + 
   scale_x_continuous(limits = c(fiscal_years[1], fiscal_years[length(fiscal_years)])) + 
   theme(legend.position = "bottom",
         plot.title = element_text(hjust = 0.5))     # title in the middle
