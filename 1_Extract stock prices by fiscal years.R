@@ -1,4 +1,4 @@
-# Extract stock prices by fiscal years
+# 1_Extract stock prices by fiscal years
 
 Sys.setlocale(locale = "English")
 
@@ -59,7 +59,7 @@ Stock_Fiscal_Quarter = function(ticker, start, startFiscal){
 }
 
 # Obtain price record with fiscal years and quarters
-ticker = "COST"
+ticker = "SBUX"
 start = "2011-01-01"
 startFiscal = 2011
 PriceRecord = Stock_Fiscal_Quarter(ticker, start, startFiscal)

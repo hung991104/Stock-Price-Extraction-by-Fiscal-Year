@@ -1,4 +1,4 @@
-# Plot Financial Data from Annual Reports
+# 3_Plot Financial Data from Annual Reports
 
 # Load Packages
 # Package names
@@ -18,7 +18,7 @@ theme_set(theme_bw())
 
 
 # Read Data Summary of specific ticker ------------------------------------
-ticker = "AON"
+ticker = "ROKU"
 ReadPath = paste0("C:/Users/User/Desktop/asset/analysis/stock analysis/", ticker, "/data/DataSummary.csv")
 DataSummary = read.csv(ReadPath, header = TRUE)
 
@@ -26,7 +26,7 @@ DataSummary = read.csv(ReadPath, header = TRUE)
 DataSummary = DataSummary %>%
   mutate(Total = select(., starts_with("X")) %>%
            rowSums()) %>%
-  filter(Total != 0) %>%
+  #filter(Total != 0) %>%
   select(-Sheet, -Metric,-Total) %>%
   rename(Metric = Name) %>%
   pivot_longer(c(-1), names_to = "year", values_to = "value") %>%
@@ -51,7 +51,7 @@ DataSummary_Margin %>%
   pivot_longer(c(-1), names_to = "margin", values_to = "value") %>%
   ggplot(aes(date, value, group = margin, color = margin)) +
   geom_line() +
-  scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.1), labels = scales::percent) +
+  scale_y_continuous(limits = c(-0.8, 1), breaks = seq(-0.8, 1, by = 0.1), labels = scales::percent) +
   labs(y = "Margin (%)", title = "Margins by fiscal years") +
   theme(plot.title = element_text(hjust = 0.5))     # title in the middle
 
@@ -120,15 +120,19 @@ Beneish_Score = Beneish_Data %>%
 
 # Plot M-Score's trend
 Beneish_Score %>%
+  select(year, M_Score)
+y_limit = c(round(min(Beneish_Score$M_Score) - 0.3, 1), round(max(Beneish_Score$M_Score) + 0.3, 1))
+
+Beneish_Score %>%
   ggplot() +
   geom_point(aes(year, M_Score)) +
   geom_line(aes(year, M_Score), data = Beneish_Score) +
   geom_hline(yintercept = -1.78, color = "red", size = 1.2) +
-  geom_text(aes(min(Beneish_Score$year), -1.78, label = -1.78, vjust = -0.75)) + 
+  geom_text(aes(min(year), -1.78, label = -1.78, vjust = -0.75)) + 
   geom_hline(yintercept = -2.22, color = "orange", size = 1.1, linetype = "dashed") + 
-  geom_text(aes(min(Beneish_Score$year), -2.22, label = -2.22, vjust = -0.75)) + 
+  geom_text(aes(min(year), -2.22, label = -2.22, vjust = -0.75)) + 
   scale_x_continuous(breaks = seq(min(Beneish_Score$year), max(Beneish_Score$year), by = 1)) + 
-  scale_y_continuous(limits = c(-4,0.5), breaks = seq(-4, 0.5, by = 0.5)) +
+  scale_y_continuous(limits = y_limit, breaks = seq(y_limit[1], y_limit[2], by = 0.5)) +
   labs(x = "Fiscal Year", y = "M-Score", title = paste0(ticker, " Beneish M-Score Trend by Fiscal Year")) +
   theme(plot.title = element_text(hjust = 0.5))     # title in the middle
 
@@ -139,3 +143,22 @@ Beneish_Score %>%
 # Save the M-Score's Plot
 SavePlotPath = paste0("C:/Users/User/Desktop/asset/analysis/stock analysis/", ticker, "/data/", ticker,"_Beneish_M_Score.jpg")
 ggsave(SavePlotPath)
+
+# Plot individual parameter's trend
+Plot_Beneish_Parameter <- function(df, x_var, y_var) {
+  
+  ggplot(df, aes(x = .data[[x_var]], y = .data[[y_var]])) + 
+    geom_point() + 
+    geom_line() +
+    labs(x = x_var, y = y_var) +
+    theme_classic(base_size = 12) + 
+    scale_y_continuous(limits = c(min(df[[y_var]])-0.05, max(df[[y_var]]) + 0.05)) +
+    scale_x_continuous(breaks = seq(min(df[[x_var]]), max(df[[x_var]]), by = 1))
+}
+
+Plot_Beneish_Parameter(Beneish_Score, "year", "GMI")
+parameters = c("DSRI", "GMI", "AQI", "SGI", "DEPI", "SGAI","LVGI", "TATA")
+i = 8
+Plot_Beneish_Parameter(Beneish_Score, "year", parameters[i])
+
+
